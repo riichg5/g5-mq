@@ -1,2 +1,2 @@
 # g5-mq
-simple message queue of data send.
+simple message queue of data send. 
