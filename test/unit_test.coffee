@@ -26,3 +26,9 @@ describe "MQ", () ->
       mq = new MQ(opt)
       mq.add {data:{name: "libo-com"}, important: false}, (err) ->
         done err
+
+  describe "mq mail send", () ->
+    it "mq._send_mail", (done) ->
+      mq = new MQ(opt)
+      mq._send_mail "test", "libo test", (err) ->
+        done err

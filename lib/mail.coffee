@@ -1,12 +1,5 @@
 nodemailer = require 'nodemailer'
 
-smtpTransport = nodemailer.createTransport("SMTP",{
-    service: "QQ",
-    auth: {
-        user: "password@funcell123.com",
-        pass: "Word@Pass123AOW"
-    }
-})
 
 class Email
   constructor: (opt) ->
@@ -17,7 +10,7 @@ class Email
     @subject = opt.subject
     @content = opt.content
     @mailOptions =
-      from: "<#{@mail_user}>"
+      from: "#{@mail_user}"
       to: "#{@mail_to}"
       subject: @subject
       text: @content
@@ -26,18 +19,18 @@ class Email
   get_transporter: () ->
     self = @
     unless @_transporter
-      nodemailer.createTransport "SMTP",
-          service: self.mail_service
-          auth:
-            user: self.mail_user
-            pass: self.mail_pwd
+      @_transporter = nodemailer.createTransport 
+        service: self.mail_service
+        auth:
+          user: self.mail_user
+          pass: self.mail_pwd
     @_transporter
 
-  send: () ->
+  send: (cb) ->
     @get_transporter().sendMail @mailOptions, (err, response) ->
       if err
-        console.log(err)
+        cb(err)
       else
-        console.log("Message sent: " + response.message);
+        cb(null)
 
 module.exports = Email

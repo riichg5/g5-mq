@@ -24,6 +24,9 @@ class MQ
     subject: subject
     content: content
 
+  _send_mail: (subject, content, cb) ->
+    new Email(@_get_mail_opt(subject, content)).send(cb)
+
   get_redis_client: () ->
     self = @
     unless @_redis_client
@@ -31,7 +34,8 @@ class MQ
       @_redis_client.on "error", (err) ->
         subject = "【#{self.identifier}】redis error"
         content = util.inspect err
-        new Email(self._get_mail_opt(subject, content)).send()
+        self._send_mail subject, content, (err) ->
+          console.log "send maill error!" if err
     @_redis_client
 
   add: (item, cb) ->
