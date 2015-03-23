@@ -15,6 +15,12 @@ describe "MQ", () ->
   beforeEach (done) ->
     done null
 
+  describe "mq.send", () ->
+    it "mq.send", (done) ->
+      mq = new MQ(opt)
+      mq.send () ->
+        done null
+
   describe "mq.add", () ->
     it "mq.add", (done) ->
       mq = new MQ(opt)
@@ -27,8 +33,9 @@ describe "MQ", () ->
       mq.add {data:{name: "libo-com"}, important: false}, (err) ->
         done err
 
-  describe "mq mail send", () ->
-    it "mq._send_mail", (done) ->
-      mq = new MQ(opt)
-      mq._send_mail "test", "libo test", (err) ->
-        done err
+  # describe "mq mail send", () ->
+  #   it "mq._send_mail", (done) ->
+  #     mq = new MQ(opt)
+  #     mq._send_mail "test", "libo test", (err) ->
+  #       done err
+

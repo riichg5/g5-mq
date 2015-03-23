@@ -1,9 +1,15 @@
 redis = require 'redis'
 Email = require './mail'
 util = require 'util'
+Logger = require './logger'
+async = require 'async'
 
 REDIS_COMMON_LIST_KEY = 'mq-common'
 REDIS_IMPORTANT_LIST_KEY = 'mq-important'
+
+PER_MSG_AMOUNT = 10
+SEND_CHECK_INTERVAL = 100   #per 0.1 second, check the task
+SENDIND_QUEUE = []
 
 class MQ
   constructor: (opt) ->
@@ -27,6 +33,54 @@ class MQ
   _send_mail: (subject, content, cb) ->
     new Email(@_get_mail_opt(subject, content)).send(cb)
 
+  _sleep: (seconds, func) ->
+    @_sleep_handle = setTimeout () ->
+        clearTimeout(@_sleep_handle)
+        func()
+      , seconds * 1000
+ 
+  _http_post: (msg) ->
+
+
+  _get_msg_item: (queue_name, msg) ->
+    {data: msg, important: if REDIS_IMPORTANT_LIST_KEY is queue_name then true else false}
+
+  _send_msg: (queue_name) ->
+    self = @
+    async.each [0..PER_MSG_AMOUNT], (num, ecb) ->
+      @get_redis_client().lpop queue_name, (err, msg) ->
+        return ecb(null) if err or !msg
+        @_http_post msg, (err) ->
+          if err
+            self.add self._get_msg_item(queue_name, msg), (err) ->
+              Logger.log msg        #写日志文件
+              ecb(err)
+          else
+            ecb(null)
+
+  _send: () ->
+    if SENDIND_QUEUE.length is 0
+      async.parallel [
+          (err, pcb) ->
+            @get_redis_client().llen(REDIS_IMPORTANT_LIST_KEY, (err, len) -> 
+              pcb err, len
+          (err, pcb) ->
+            @get_redis_client().llen(REDIS_COMMON_LIST_KEY, (err, len) -> 
+              pcb err, len
+        ]
+        , (err, llens) ->
+          if err
+            Logger.show "redis llen error:", err
+            return
+          important_amount = llens[0]
+          common_amount = llens[1]
+          if important isnt 0
+
+          
+
+
+      get_redis_client().lpop REDIS_COMMON_LIST_KEY, (err, item) ->
+
   get_redis_client: () ->
     self = @
     unless @_redis_client
@@ -45,8 +99,9 @@ class MQ
     else
       client.rpush REDIS_COMMON_LIST_KEY, JSON.stringify(item.data), cb
 
-  #send: () ->
-
+  start: () ->
+    Logger.show "start send msg"
+    @_send_handle = setInterval @_send, SEND_CHECK_INTERVAL
 
   #monit: () ->
 
